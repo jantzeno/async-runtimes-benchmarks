@@ -1,3 +1,3 @@
-module coroutines
+module goroutine
 
-go 1.18
+go 1.20
