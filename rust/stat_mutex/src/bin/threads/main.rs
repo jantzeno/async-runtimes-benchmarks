@@ -1,5 +1,5 @@
 use rand::{thread_rng, Rng};
-use rust::running_stat::RunningStat;
+use stat_mutex::running_stat::RunningStat;
 use std::env;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -12,8 +12,8 @@ fn main() {
         _ => default,
     };
 
-    let max_temp = 100.0;
-    let min_temp = 0.0;
+    let max = 100.0;
+    let min = 0.0;
     let mut rng = thread_rng();
     let stat = Arc::new(Mutex::new(RunningStat::new()));
 
@@ -21,9 +21,9 @@ fn main() {
 
     let mut handles = Vec::new();
     for _ in 0..num_threads {
-        let temp = rng.gen_range(min_temp..=max_temp);
-        let stat = stat.clone();
-        let handle = thread::spawn(move || stat.lock().unwrap().push(temp));
+        let num = rng.gen_range(min..=max);
+        let stat = Arc::clone(&stat);
+        let handle = thread::spawn(move || stat.lock().unwrap().push(num));
         handles.push(handle);
     }
     for handle in handles {
