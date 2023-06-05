@@ -1,9 +1,8 @@
+use sha2::{Digest, Sha512};
 use std::env;
 use std::sync::{Arc, Mutex};
 use std::thread::available_parallelism;
-
-use rand::{thread_rng, Rng};
-use rust::running_stat::RunningStat;
+use uuid::Uuid;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,10 +15,7 @@ fn main() {
         _ => default_tasks,
     };
 
-    let max_temp = 100.0;
-    let min_temp = 0.0;
-    let mut rng = thread_rng();
-    let stat = Arc::new(Mutex::new(RunningStat::new()));
+    let hashes: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
 
     println!("Create threadpool of {} threads", default_pool);
 
@@ -29,13 +25,21 @@ fn main() {
         .unwrap();
 
     for _ in 0..num_tasks / default_pool {
-        let temp = rng.gen_range(min_temp..=max_temp);
-        let stat = stat.clone();
-        pool.broadcast(move |_| stat.lock().unwrap().push(temp));
+        let hashes: Arc<Mutex<Vec<String>>> = Arc::clone(&hashes);
+        pool.broadcast(move |_| {
+            // Generate and hash a UUID
+            let uuid = Uuid::new_v4();
+            let mut hasher = Sha512::new();
+            hasher.update(uuid.as_bytes());
+            let hash = hasher.finalize();
+
+            // Store the hash
+            let mut hashes = hashes.lock().unwrap();
+            hashes.push(format!("{:x}", hash));
+        });
     }
 
     println!("Broadcast complete");
 
-    println!("Mean: {:.1}", stat.lock().unwrap().mean());
-    println!("Count: {}", stat.lock().unwrap().data_value_count());
+    println!("Hash Count: {}", hashes.lock().unwrap().len());
 }

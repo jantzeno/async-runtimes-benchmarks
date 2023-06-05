@@ -1,5 +1,5 @@
 use rand::{thread_rng, Rng};
-use rust::running_stat::RunningStat;
+use stat_mutex::running_stat::RunningStat;
 use std::{env, sync::Arc};
 use tokio::{sync::Mutex, task};
 
@@ -12,8 +12,8 @@ async fn main() {
         _ => default,
     };
 
-    let max_temp = 100.0;
-    let min_temp = 0.0;
+    let max = 100.0;
+    let min = 0.0;
     let mut rng = thread_rng();
     let stat = Arc::new(Mutex::new(RunningStat::new()));
 
@@ -21,10 +21,10 @@ async fn main() {
 
     let mut tasks = Vec::new();
     for _ in 0..num_tasks {
-        let temp = rng.gen_range(min_temp..=max_temp);
-        let stat = stat.clone();
+        let num = rng.gen_range(min..=max);
+        let stat = Arc::clone(&stat);
         tasks.push(task::spawn(async move {
-            stat.lock().await.push(temp);
+            stat.lock().await.push(num);
         }));
     }
     for task in tasks {
