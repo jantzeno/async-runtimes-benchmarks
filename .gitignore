@@ -1,2 +1,6 @@
 # Rust and C#
 \target
+
+# Results
+*.json
+*.txt
