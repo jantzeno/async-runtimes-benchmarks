@@ -1,6 +1,12 @@
 # Rust and C#
 \target
+\obj
+\bin
+
+# Java
+*.class
 
 # Results
 *.json
 *.txt
+tables.md
